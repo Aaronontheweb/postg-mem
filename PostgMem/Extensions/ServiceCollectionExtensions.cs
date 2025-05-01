@@ -1,6 +1,7 @@
 using Npgsql;
 using PostgMem.Services;
 using PostgMem.Settings;
+using Registrator.Net;
 
 namespace PostgMem.Extensions;
 
@@ -11,6 +12,7 @@ internal static class ServiceCollectionExtensions
     {
         services.AddEmbeddings();
         services.AddStorage();
+        services.AutoRegisterTypesInAssemblies(typeof(Storage).Assembly);
         return services;
     }
 
