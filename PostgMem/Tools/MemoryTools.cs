@@ -161,7 +161,7 @@ public class MemoryTools
         CancellationToken cancellationToken = default
     )
     {
-        var rel = await _storage.CreateRelationship(fromId, toId, RelationshipTypeHelper.FromDbString(type), cancellationToken);
+        var rel = await _storage.CreateRelationship(fromId, toId, type, cancellationToken);
         return $"Relationship created: {rel.Id} from {rel.FromMemoryId} to {rel.ToMemoryId} (type: {rel.Type})";
     }
 }
