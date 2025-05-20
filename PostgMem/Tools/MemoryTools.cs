@@ -3,6 +3,7 @@ using System.Text;
 using ModelContextProtocol.Server;
 using PostgMem.Services;
 using Memory = PostgMem.Models.Memory;
+using PostgMem.Models;
 
 namespace PostgMem.Tools;
 
@@ -160,7 +161,7 @@ public class MemoryTools
         CancellationToken cancellationToken = default
     )
     {
-        var rel = await _storage.CreateRelationship(fromId, toId, type, cancellationToken);
+        var rel = await _storage.CreateRelationship(fromId, toId, RelationshipTypeHelper.FromDbString(type), cancellationToken);
         return $"Relationship created: {rel.Id} from {rel.FromMemoryId} to {rel.ToMemoryId} (type: {rel.Type})";
     }
 }

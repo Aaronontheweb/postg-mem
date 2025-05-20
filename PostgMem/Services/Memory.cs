@@ -38,8 +38,8 @@ public interface IStorage
     );
 
     Task<List<Memory>> GetMany(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
-    Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, string type, CancellationToken cancellationToken = default);
-    Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, string? type = null, CancellationToken cancellationToken = default);
+    Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, RelationshipType type, CancellationToken cancellationToken = default);
+    Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, RelationshipType? type = null, CancellationToken cancellationToken = default);
 }
 
 [AutoRegisterInterfaces(ServiceLifetime.Singleton)]
@@ -127,7 +127,7 @@ public class Storage : IStorage
         // Optionally create a relationship
         if (relatedTo.HasValue && !string.IsNullOrWhiteSpace(relationshipType))
         {
-            await CreateRelationship(memory.Id, relatedTo.Value, relationshipType, cancellationToken);
+            await CreateRelationship(memory.Id, relatedTo.Value, RelationshipTypeHelper.FromDbString(relationshipType), cancellationToken);
         }
 
         return memory;
@@ -280,7 +280,7 @@ public class Storage : IStorage
         return memories;
     }
 
-    public async Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, string type, CancellationToken cancellationToken = default)
+    public async Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, RelationshipType type, CancellationToken cancellationToken = default)
     {
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         const string sql = @"
@@ -298,25 +298,25 @@ public class Storage : IStorage
         cmd.Parameters.AddWithValue("id", rel.Id);
         cmd.Parameters.AddWithValue("from", rel.FromMemoryId);
         cmd.Parameters.AddWithValue("to", rel.ToMemoryId);
-        cmd.Parameters.AddWithValue("type", rel.Type);
+        cmd.Parameters.AddWithValue("type", type.ToDbString());
         cmd.Parameters.AddWithValue("createdAt", rel.CreatedAt);
         await cmd.ExecuteNonQueryAsync(cancellationToken);
         return rel;
     }
 
-    public async Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, string? type = null, CancellationToken cancellationToken = default)
+    public async Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, RelationshipType? type = null, CancellationToken cancellationToken = default)
     {
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         string sql = @"
             SELECT id, from_memory_id, to_memory_id, type, created_at
             FROM memory_relationships
             WHERE from_memory_id = @id";
-        if (!string.IsNullOrEmpty(type))
+        if (type.HasValue)
             sql += " AND type = @type";
         await using NpgsqlCommand cmd = new(sql, connection);
         cmd.Parameters.AddWithValue("id", memoryId);
-        if (!string.IsNullOrEmpty(type))
-            cmd.Parameters.AddWithValue("type", type);
+        if (type.HasValue)
+            cmd.Parameters.AddWithValue("type", type.Value.ToDbString());
         List<MemoryRelationship> rels = [];
         await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -326,7 +326,7 @@ public class Storage : IStorage
                 Id = reader.GetGuid(0),
                 FromMemoryId = reader.GetGuid(1),
                 ToMemoryId = reader.GetGuid(2),
-                Type = reader.GetString(3),
+                Type = RelationshipTypeHelper.FromDbString(reader.GetString(3)),
                 CreatedAt = reader.GetDateTime(4)
             });
         }

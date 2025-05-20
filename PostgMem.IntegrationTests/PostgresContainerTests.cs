@@ -8,6 +8,7 @@ using Npgsql;
 using PostgMem.Extensions;
 using PostgMem.Services;
 using PostgMem.Settings;
+using PostgMem.Models;
 using Xunit.Abstractions;
 
 namespace PostgMem.IntegrationTests;
@@ -217,12 +218,12 @@ public class IntegrationTests : TestKit
         var m1 = await _storage.StoreMemory("type1", "{\"fact\": \"Parent\"}", "src1", new[] { "tag1" }, 1.0);
         var m2 = await _storage.StoreMemory("type2", "{\"fact\": \"Child\"}", "src2", new[] { "tag2" }, 1.0);
         // Create relationship
-        var rel = await _storage.CreateRelationship(m1.Id, m2.Id, "parent", CancellationToken.None);
+        var rel = await _storage.CreateRelationship(m1.Id, m2.Id, RelationshipType.Parent, CancellationToken.None);
         Assert.Equal(m1.Id, rel.FromMemoryId);
         Assert.Equal(m2.Id, rel.ToMemoryId);
-        Assert.Equal("parent", rel.Type);
+        Assert.Equal(RelationshipType.Parent, rel.Type);
         // Get relationships
-        var rels = await _storage.GetRelationships(m1.Id, "parent", CancellationToken.None);
+        var rels = await _storage.GetRelationships(m1.Id, RelationshipType.Parent, CancellationToken.None);
         Assert.Single(rels);
         Assert.Equal(rel.Id, rels[0].Id);
         Assert.Equal(m2.Id, rels[0].ToMemoryId);
@@ -235,15 +236,15 @@ public class IntegrationTests : TestKit
         // Store a related memory first
         var related = await _storage.StoreMemory("typeX", "{\"fact\": \"Related\"}", "srcX", new[] { "tagX" }, 1.0);
         // Store a new memory and create a relationship in one call
-        var memory = await _storage.StoreMemory("typeY", "{\"fact\": \"Main\"}", "srcY", new[] { "tagY" }, 1.0, related.Id, "reference");
+        var memory = await _storage.StoreMemory("typeY", "{\"fact\": \"Main\"}", "srcY", new[] { "tagY" }, 1.0, related.Id, RelationshipType.Reference.ToDbString());
         // Check the memory exists
         var retrieved = await _storage.Get(memory.Id);
         Assert.NotNull(retrieved);
         // Check the relationship exists
-        var rels = await _storage.GetRelationships(memory.Id, "reference");
+        var rels = await _storage.GetRelationships(memory.Id, RelationshipType.Reference);
         Assert.Single(rels);
         Assert.Equal(memory.Id, rels[0].FromMemoryId);
         Assert.Equal(related.Id, rels[0].ToMemoryId);
-        Assert.Equal("reference", rels[0].Type);
+        Assert.Equal(RelationshipType.Reference, rels[0].Type);
     }
 }
