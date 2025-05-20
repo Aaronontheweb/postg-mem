@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var ollama =
@@ -16,8 +19,15 @@ var embeddings = ollama
 var postgres = builder.AddPostgres("postgres")
     // install pgvector so we can get vector / embedding support
     // https://github.com/pgvector/pgvector?tab=readme-ov-file#docker
-    .WithImage("pgvector/pgvector", "pg17");
+    .WithImage("pgvector/pgvector", "pg17")
+    // Add init script to ensure database creation
+    .WithEnvironment("POSTGRES_DB", "postgmem")
+    .WithDataVolume();
 
+// Add a health check to verify database connectivity
+postgres.WithHealthCheck(key: "postgres-health");
+
+// This is now redundant but keeping for clarity in connection string generation
 var memDb = postgres.AddDatabase("postgmem");
 
 // adminer interface for postgres
@@ -25,8 +35,7 @@ var adminer = postgres.WithPgAdmin();
 
 var memServer = builder.AddProject<Projects.PostgMem>("postg-mem")
     .WithReference(memDb, "Storage")
-    .WaitFor(memDb)
-    .WaitFor(embeddings)
+    .WithReference(embeddings)
     .WithEnvironment("Embeddings__ApiUrl", ollama.GetEndpoint("http"))
     .WithEnvironment("Embeddings__Model", embeddingsModelName);
 
