@@ -7,16 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Configuration.Extensions.EnvironmentFile" Version="2.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
-        <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.5" />
-        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.5" />
-        <PackageReference Include="Npgsql" Version="9.0.3" />
-        <PackageReference Include="pgvector" Version="0.3.1" />
-        <PackageReference Include="Registrator.Net" Version="3.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+        <PackageReference Include="Configuration.Extensions.EnvironmentFile" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="ModelContextProtocol" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
+        <PackageReference Include="Npgsql" />
+        <PackageReference Include="pgvector" />
+        <PackageReference Include="Registrator.Net" />
+        <PackageReference Include="Serilog.Extensions.Logging.File" />
     </ItemGroup>
 
 </Project>
