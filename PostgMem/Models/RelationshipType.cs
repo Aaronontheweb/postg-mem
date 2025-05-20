@@ -2,37 +2,25 @@ using System;
 
 namespace PostgMem.Models;
 
-public enum RelationshipType
+public static class RelationshipType
 {
-    Parent,
-    Child,
-    Reference,
-    Related,
-    Cause,
-    Effect,
-    Duplicate,
-    VersionOf,
-    PartOf,
-    Contains,
-    Precedes,
-    Follows,
-    ExampleOf,
-    InstanceOf,
-    Generalizes,
-    Specializes,
-    Synonym,
-    Antonym
-}
-
-public static class RelationshipTypeHelper
-{
-    public static string ToDbString(this RelationshipType type)
-        => type.ToString();
-
-    public static RelationshipType FromDbString(string value)
-    {
-        if (Enum.TryParse<RelationshipType>(value, true, out var result))
-            return result;
-        throw new ArgumentException($"Unknown relationship type: {value}");
-    }
+    // Common relationship types as constants
+    public const string Parent = "Parent";
+    public const string Child = "Child";
+    public const string Reference = "Reference";
+    public const string Related = "Related";
+    public const string Cause = "Cause";
+    public const string Effect = "Effect";
+    public const string Duplicate = "Duplicate";
+    public const string VersionOf = "VersionOf";
+    public const string PartOf = "PartOf";
+    public const string Contains = "Contains";
+    public const string Precedes = "Precedes";
+    public const string Follows = "Follows";
+    public const string ExampleOf = "ExampleOf";
+    public const string InstanceOf = "InstanceOf";
+    public const string Generalizes = "Generalizes";
+    public const string Specializes = "Specializes";
+    public const string Synonym = "Synonym";
+    public const string Antonym = "Antonym";
 } 
