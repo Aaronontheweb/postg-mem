@@ -1,4 +1,5 @@
 using Npgsql;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,11 @@ public static class SchemaMigrator
 {
     public static async Task MigrateAsync(string connectionString, CancellationToken cancellationToken = default)
     {
+        using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var logger = loggerFactory.CreateLogger("SchemaMigrator");
+        
+        logger.LogInformation("Starting database schema migration...");
+        
         await using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -29,5 +35,7 @@ public static class SchemaMigrator
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
         await cmd.ExecuteNonQueryAsync(cancellationToken);
+        
+        logger.LogInformation("Database schema migration completed successfully");
     }
 } 
