@@ -97,6 +97,8 @@ public class IntegrationTests : TestKit
             "test",
             new[] { "test" },
             1.0,
+            null,
+            null,
             CancellationToken.None);
 
         // Test retrieving the memory
@@ -224,5 +226,24 @@ public class IntegrationTests : TestKit
         Assert.Single(rels);
         Assert.Equal(rel.Id, rels[0].Id);
         Assert.Equal(m2.Id, rels[0].ToMemoryId);
+    }
+
+    [Fact]
+    public async Task CanStoreMemoryWithRelationship()
+    {
+        _storage = Host.Services.GetRequiredService<IStorage>();
+        // Store a related memory first
+        var related = await _storage.StoreMemory("typeX", "{\"fact\": \"Related\"}", "srcX", new[] { "tagX" }, 1.0);
+        // Store a new memory and create a relationship in one call
+        var memory = await _storage.StoreMemory("typeY", "{\"fact\": \"Main\"}", "srcY", new[] { "tagY" }, 1.0, related.Id, "reference");
+        // Check the memory exists
+        var retrieved = await _storage.Get(memory.Id);
+        Assert.NotNull(retrieved);
+        // Check the relationship exists
+        var rels = await _storage.GetRelationships(memory.Id, "reference");
+        Assert.Single(rels);
+        Assert.Equal(memory.Id, rels[0].FromMemoryId);
+        Assert.Equal(related.Id, rels[0].ToMemoryId);
+        Assert.Equal("reference", rels[0].Type);
     }
 }

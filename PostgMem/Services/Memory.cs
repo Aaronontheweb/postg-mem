@@ -14,6 +14,8 @@ public interface IStorage
         string source,
         string[]? tags,
         double confidence,
+        Guid? relatedTo = null,
+        string? relationshipType = null,
         CancellationToken cancellationToken = default
     );
 
@@ -58,6 +60,8 @@ public class Storage : IStorage
         string source,
         string[]? tags,
         double confidence,
+        Guid? relatedTo = null,
+        string? relationshipType = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -119,6 +123,12 @@ public class Storage : IStorage
         cmd.Parameters.AddWithValue("updatedAt", memory.UpdatedAt);
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+        // Optionally create a relationship
+        if (relatedTo.HasValue && !string.IsNullOrWhiteSpace(relationshipType))
+        {
+            await CreateRelationship(memory.Id, relatedTo.Value, relationshipType, cancellationToken);
+        }
 
         return memory;
     }

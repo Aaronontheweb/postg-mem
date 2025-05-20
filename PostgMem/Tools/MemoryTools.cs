@@ -16,27 +16,29 @@ public class MemoryTools
         _storage = storage;
     }
 
-    [McpServerTool, Description("Store a new memory in the database")]
+    [McpServerTool, Description("Store a new memory in the database, optionally creating a relationship to another memory")]
     public async Task<string> Store(
         [Description("The type of memory (e.g., 'conversation', 'document', etc.)")] string type,
         [Description("The content of the memory as a JSON object")] string content,
         [Description("The source of the memory (e.g., 'user', 'system', etc.)")] string source,
         [Description("Optional tags to categorize the memory")] string[]? tags = null,
         [Description("Confidence score for the memory (0.0 to 1.0)")] double confidence = 1.0,
+        [Description("Optionally, the ID of a related memory")] Guid? relatedTo = null,
+        [Description("Optionally, the type of relationship to create")] string? relationshipType = null,
         CancellationToken cancellationToken = default
     )
     {
-
-        // Store the memory
+        // Store the memory (and optionally create a relationship)
         Memory memory = await _storage.StoreMemory(
             type,
             content,
             source,
             tags,
             confidence,
+            relatedTo,
+            relationshipType,
             cancellationToken
         );
-
         return $"Memory stored successfully with ID: {memory.Id}";
     }
 
@@ -80,7 +82,6 @@ public class MemoryTools
             );
             result.AppendLine($"Confidence: {memory.Confidence:F2}");
             result.AppendLine($"Created: {memory.CreatedAt:yyyy-MM-dd HH:mm:ss}");
-            result.AppendLine();
         }
 
         return result.ToString();
