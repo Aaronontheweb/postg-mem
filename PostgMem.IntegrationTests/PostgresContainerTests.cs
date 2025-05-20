@@ -2,6 +2,9 @@
 
 namespace PostgMem.IntegrationTests;
 
+/// <summary>
+/// Validates that the schema exists can be accessed
+/// </summary>
 [Collection(nameof(PostgresIntegrationSpecs))]
 public class PostgresContainerTests
 {
