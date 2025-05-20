@@ -295,4 +295,8 @@ You should receive a response confirming the SSE endpoint is available.
 
 ## Contributing
 
-[Your contribution guidelines here] 
+[Your contribution guidelines here]
+
+## For Contributors
+
+If you want to customize or extend the database schema, see [docs/schema-migrations.md](docs/schema-migrations.md) for details on how migrations work, how to add new migrations, and best practices for schema changes. 
