@@ -1,0 +1,90 @@
+name: pr_validation
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - main
+  pull_request:
+    branches:
+      - master
+      - dev
+      - main
+
+jobs:
+  build-docker:
+    # Permissions this GitHub Action needs for other things in GitHub
+    name: Docker-${{matrix.os}}
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4.1.7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: "Install .NET SDK"
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          global-json-file: "./global.json"
+
+      - name: "Update release notes"
+        shell: pwsh
+        run: |
+          ./build.ps1
+
+      # needed for multi-platform targeting
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+
+
+      - name: "build docker images"
+        run: dotnet publish -c Release /t:PublishContainer
+  test:
+    name: Test-${{matrix.os}}
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4.2.2
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: "Install .NET SDK"
+        uses: actions/setup-dotnet@v4.3.1
+        with:
+          global-json-file: "./global.json"
+
+      - name: "Restore .NET tools"
+        run: dotnet tool restore
+
+      - name: "Update release notes"
+        shell: pwsh
+        run: |
+          ./build.ps1
+
+      - name: "dotnet build"
+        run: dotnet build -c Release
+
+      - name: "dotnet test"
+        shell: bash
+        run: dotnet test -c Release 
