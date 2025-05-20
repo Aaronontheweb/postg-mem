@@ -1,3 +1,7 @@
-#### 1.0.0 May 19th 2025 ####
+#### 1.0.1 May 20th 2025 ####
 
-- Initial release
+- Fleshed out MCP tooling descriptions (#11)
+- Cleaned up README (#10)
+- Added memory relationships (#9)
+- Added schema migrations (#8)
+- Added GitHub Actions support (#7)
