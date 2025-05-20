@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgMem", "PostgMem\PostgMem.csproj", "{2DD38A34-C34E-4DF8-ACC2-ED2820883662}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgMem.IntegrationTests", "PostgMem.IntegrationTests\PostgMem.IntegrationTests.csproj", "{655A4803-3CAC-4DB5-B08A-C7A18386298C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{2DD38A34-C34E-4DF8-ACC2-ED2820883662}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DD38A34-C34E-4DF8-ACC2-ED2820883662}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DD38A34-C34E-4DF8-ACC2-ED2820883662}.Release|Any CPU.Build.0 = Release|Any CPU
+		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

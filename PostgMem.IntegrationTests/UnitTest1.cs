@@ -1,39 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using Xunit;
-using Testcontainers.PostgreSql;
-using Npgsql;
-using PostgMem.Services;
+﻿using Npgsql;
 
-public class PostgresTestCollection : ICollectionFixture<PostgresTestFixture> { }
+namespace PostgMem.IntegrationTests;
 
-public class PostgresTestFixture : IAsyncLifetime
-{
-    public readonly PostgreSqlContainer Container = new PostgreSqlBuilder()
-        .WithImage("pgvector/pgvector:pg16")
-        .WithCleanUp(true)
-        .WithPortBinding(5432, true)
-        .WithUsername("testuser")
-        .WithPassword("testpass")
-        .WithDatabase("testdb")
-        .Build();
-
-    public string ConnectionString => Container.GetConnectionString();
-
-    public async Task InitializeAsync()
-    {
-        await Container.StartAsync();
-        await SchemaMigrator.MigrateAsync(ConnectionString);
-    }
-
-    public async Task DisposeAsync() => await Container.DisposeAsync();
-}
-
-[Collection("PostgresTestCollection")]
+[Collection(nameof(PostgresIntegrationSpecs))]
 public class PostgresContainerTests
 {
-    private readonly PostgresTestFixture _fixture;
-    public PostgresContainerTests(PostgresTestFixture fixture) => _fixture = fixture;
+    private readonly PostgresFixture _fixture;
+    public PostgresContainerTests(PostgresFixture fixture) => _fixture = fixture;
 
     [Fact]
     public async Task CanConnectAndUsePgvector()
