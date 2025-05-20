@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireVersion)"/>
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsAspireHost>true</IsAspireHost>
+        <UserSecretsId>7debb45f-b6f3-4226-a78e-e65920bab37a</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost"/>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PostgMem\PostgMem.csproj" />
+    </ItemGroup>
+
+</Project>

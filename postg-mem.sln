@@ -4,6 +4,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgMem", "PostgMem\PostgM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgMem.IntegrationTests", "PostgMem.IntegrationTests\PostgMem.IntegrationTests.csproj", "{655A4803-3CAC-4DB5-B08A-C7A18386298C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgMem.AppHost", "PostgMem.AppHost\PostgMem.AppHost.csproj", "{C6026E4B-83D9-4797-9773-62E6CF759DEA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{7483C24C-E73B-484D-9B6A-269F78E5E57F}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		global.json = global.json
+		nuget.config = nuget.config
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +29,9 @@ Global
 		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{655A4803-3CAC-4DB5-B08A-C7A18386298C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6026E4B-83D9-4797-9773-62E6CF759DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6026E4B-83D9-4797-9773-62E6CF759DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6026E4B-83D9-4797-9773-62E6CF759DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6026E4B-83D9-4797-9773-62E6CF759DEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
