@@ -208,6 +208,87 @@ Parameters:
 - `EmbeddingService.cs`: Generates vector embeddings for text
 - `MemoryTools.cs`: Implements MCP tools for interacting with the memory storage
 
+## MCP Integration Examples
+
+To use PostgMem with applications that support the Model Context Protocol (MCP), you need to configure your client application to connect to the PostgMem MCP server.
+
+### Example: mcp.json Configuration
+
+Create an `mcp.json` file in your client application's directory:
+
+```json
+{
+  "postgmem": {
+    "url": "http://localhost:5000/sse"
+  }
+}
+```
+
+### Integrating with Cursor
+
+To use PostgMem with Cursor:
+
+1. Add the MCP server configuration to Cursor's settings:
+   - Open Cursor
+   - Go to Settings
+   - Search for "MCP"
+   - Add the following to your settings:
+
+```json
+{
+  "mcpServers": {
+    "postgmem": {
+      "url": "http://localhost:5000/sse"
+    }
+  }
+}
+```
+
+2. Restart Cursor to apply the changes
+3. In your workflow, you can now use PostgMem's memory storage capabilities
+
+### Integrating with Claude Code
+
+To use PostgMem with Claude Code:
+
+1. Place an `mcp.json` file in the root of your workspace:
+
+```json
+{
+  "postgmem": {
+    "url": "http://localhost:5000/sse"
+  }
+}
+```
+
+2. Claude Code will automatically detect the MCP configuration and connect to the PostgMem server
+3. You can then use commands like "Remember X" or "Recall X" to interact with the memory storage
+
+### Docker Compose Networking
+
+If you're running both your client application and PostgMem in Docker containers using Docker Compose, you'll need to ensure they're on the same network. Use the service name as the hostname:
+
+```json
+{
+  "postgmem": {
+    "url": "http://postgmem-api:5000/sse"
+  }
+}
+```
+
+### Testing MCP Connectivity
+
+To test if your MCP connection is working:
+
+1. Start the PostgMem server
+2. Send a simple curl request to verify the server is responding:
+
+```bash
+curl http://localhost:5000/sse
+```
+
+You should receive a response confirming the SSE endpoint is available.
+
 ## License
 
 [Your license information here]
