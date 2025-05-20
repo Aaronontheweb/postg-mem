@@ -22,5 +22,17 @@ builder
 
 WebApplication app = builder.Build();
 
+// Run schema migration at startup
+try
+{
+    var connectionString = builder.Configuration.GetConnectionString("Storage") ?? throw new InvalidOperationException("Missing Storage connection string");
+    PostgMem.Services.SchemaMigrator.MigrateAsync(connectionString).GetAwaiter().GetResult();
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Schema migration failed: {ex.Message}");
+    throw;
+}
+
 app.MapMcp();
 app.Run();
