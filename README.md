@@ -1,112 +1,5 @@
 # PostgMem
 
-PostgMem is a Vector Database Memory using PostgreSQL with pgvector extension and Ollama for embedding generation.
-
-## Prerequisites
-
-- Docker and Docker Compose
-- .NET 9.0 SDK
-
-## Running the Application
-
-### Option 1: Start Infrastructure and Container Application (Recommended)
-
-1. Build and publish the .NET container:
-
-```bash
-# From solution root directory
-dotnet publish -c Release /t:PublishContainer
-```
-
-This will create a container image named `postgmem:latest`.
-
-2. Start all services with Docker Compose:
-
-```bash
-docker-compose up -d
-```
-
-This will start:
-- PostgreSQL with pgvector extension on port 5432
-- PgAdmin (PostgreSQL admin interface) on port 5050
-- Ollama (for embeddings) on port 11434
-- PostgMem application on port 5000
-
-### Option 2: Local Development
-
-1. Start only the infrastructure services:
-
-```bash
-docker-compose up -d postgres pgadmin ollama ollama-init
-```
-
-2. Run the .NET application locally with the required environment variables:
-
-```bash
-# PowerShell:
-cd PostgMem
-$env:ConnectionStrings__Storage="Host=localhost;Port=5432;Database=postgmem;Username=postgres;Password=postgres"
-$env:Embeddings__ApiUrl="http://localhost:11434"
-$env:Embeddings__Model="all-minilm:33m-l12-v2-fp16"
-dotnet run
-```
-
-For bash/zsh (Linux/macOS):
-```bash
-cd PostgMem
-export ConnectionStrings__Storage="Host=localhost;Port=5432;Database=postgmem;Username=postgres;Password=postgres"
-export Embeddings__ApiUrl="http://localhost:11434"
-export Embeddings__Model="all-minilm:33m-l12-v2-fp16"
-dotnet run
-```
-
-## Container Information
-
-The PostgMem application is containerized with the following settings:
-- Repository: `postgmem`
-- Tags: `latest` (and version when specified)
-- OS: Linux
-- Supported architectures: `linux-x64`, `linux-arm64`, `linux-arm`
-
-## Connecting to PostgMem
-
-The PostgMem API will be available at:
-
-```
-http://localhost:5000
-```
-
-## Accessing PostgreSQL
-
-PostgreSQL is configured with the following credentials:
-- Host: localhost
-- Port: 5432
-- Database: postgmem
-- Username: postgres
-- Password: postgres
-
-You can also use PgAdmin to manage the database at http://localhost:5050.
-
-## Embedding Model
-
-The system uses the `all-minilm:33m-l12-v2-fp16` model from Ollama for generating embeddings.
-
-## Shutting Down
-
-To stop the infrastructure services, run:
-
-```bash
-docker-compose down
-```
-
-To stop and remove all volumes (which will delete all data), run:
-
-```bash
-docker-compose down -v
-```
-
-## Overview
-
 PostgMem is a .NET-based service that allows AI agents to store, retrieve, and search through memories using vector embeddings. It leverages PostgreSQL with the pgvector extension to provide efficient similarity search capabilities.
 
 Key features:
@@ -124,179 +17,72 @@ Key features:
 - ASP.NET Core
 - Npgsql for PostgreSQL connectivity
 
-## Setup
+---
 
-### Database Configuration
+## 🚀 Local Deployment (Recommended)
 
-1. Create a PostgreSQL database for the application
-2. Install the pgvector extension in your database:
-   ```sql
-   CREATE EXTENSION vector;
-   ```
-3. Create the memories table:
-   ```sql
-   CREATE TABLE memories (
-       id UUID PRIMARY KEY,
-       type TEXT NOT NULL,
-       content JSONB NOT NULL,
-       source TEXT NOT NULL,
-       embedding VECTOR(384) NOT NULL,
-       tags TEXT[] NOT NULL,
-       confidence DOUBLE PRECISION NOT NULL,
-       created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-       updated_at TIMESTAMP WITH TIME ZONE NOT NULL
-   );
-   ```
+### Prerequisites
+- Docker and Docker Compose
+- .NET 9.0 SDK
 
-### Environment Configuration
-
-Configure the application settings in the `.env` file:
-
-```
-ConnectionStrings__Storage=Host=localhost;Port=5432;Database=postgmem;Username=postgres;Password=postgres
-Embeddings__ApiUrl=http://localhost:11434
-Embeddings__Model=all-minilm:33m-l12-v2-fp16
-```
-
-- `ConnectionStrings__Storage`: PostgreSQL connection string
-- `Embeddings__ApiUrl`: URL of your embedding API (defaults to Ollama)
-- `Embeddings__Model`: The embedding model to use
-
-## MCP Tools
-
-The following MCP tools are available:
-
-### Store
-
-Store a new memory in the database.
-
-Parameters:
-- `type` (string): The type of memory (e.g., 'conversation', 'document', etc.)
-- `content` (string): The content of the memory as a JSON object
-- `source` (string): The source of the memory (e.g., 'user', 'system', etc.)
-- `tags` (string[]): Optional tags to categorize the memory
-- `confidence` (double): Confidence score for the memory (0.0 to 1.0)
-
-### Search
-
-Search for memories similar to the provided text.
-
-Parameters:
-- `query` (string): The text to search for similar memories
-- `limit` (int): Maximum number of results to return (default: 10)
-- `minSimilarity` (double): Minimum similarity threshold (0.0 to 1.0) (default: 0.7)
-- `filterTags` (string[]): Optional tags to filter memories
-
-### Get
-
-Retrieve a specific memory by ID.
-
-Parameters:
-- `id` (Guid): The ID of the memory to retrieve
-
-### Delete
-
-Delete a memory by ID.
-
-Parameters:
-- `id` (Guid): The ID of the memory to delete
-
-## Implementation Details
-
-- `Memory.cs`: Defines the data model for memories
-- `Storage.cs`: Handles database operations for storing and retrieving memories
-- `EmbeddingService.cs`: Generates vector embeddings for text
-- `MemoryTools.cs`: Implements MCP tools for interacting with the memory storage
-
-## MCP Integration Examples
-
-To use PostgMem with applications that support the Model Context Protocol (MCP), you need to configure your client application to connect to the PostgMem MCP server.
-
-### Example: mcp.json Configuration
-
-Create an `mcp.json` file in your client application's directory:
-
-```json
-{
-  "postgmem": {
-    "url": "http://localhost:5000/sse"
-  }
-}
-```
-
-### Integrating with Cursor
-
-To use PostgMem with Cursor:
-
-1. Add the MCP server configuration to Cursor's settings:
-   - Open Cursor
-   - Go to Settings
-   - Search for "MCP"
-   - Add the following to your settings:
-
-```json
-{
-  "mcpServers": {
-    "postgmem": {
-      "url": "http://localhost:5000/sse"
-    }
-  }
-}
-```
-
-2. Restart Cursor to apply the changes
-3. In your workflow, you can now use PostgMem's memory storage capabilities
-
-### Integrating with Claude Code
-
-To use PostgMem with Claude Code:
-
-1. Place an `mcp.json` file in the root of your workspace:
-
-```json
-{
-  "postgmem": {
-    "url": "http://localhost:5000/sse"
-  }
-}
-```
-
-2. Claude Code will automatically detect the MCP configuration and connect to the PostgMem server
-3. You can then use commands like "Remember X" or "Recall X" to interact with the memory storage
-
-### Docker Compose Networking
-
-If you're running both your client application and PostgMem in Docker containers using Docker Compose, you'll need to ensure they're on the same network. Use the service name as the hostname:
-
-```json
-{
-  "postgmem": {
-    "url": "http://postgmem-api:5000/sse"
-  }
-}
-```
-
-### Testing MCP Connectivity
-
-To test if your MCP connection is working:
-
-1. Start the PostgMem server
-2. Send a simple curl request to verify the server is responding:
+### 1. Start Infrastructure and Application
 
 ```bash
-curl http://localhost:5000/sse
+# From solution root directory
+# Build and publish the .NET container
+
+dotnet publish -c Release /t:PublishContainer
 ```
 
-You should receive a response confirming the SSE endpoint is available.
+This creates a container image named `postgmem:latest`.
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- PostgreSQL with pgvector (port 5432)
+- PgAdmin (port 5050)
+- Ollama (port 11434)
+- PostgMem API (port 5000)
+
+---
+
+## 🔌 MCP Configuration Example
+
+To use PostgMem with any MCP-compatible client, add the following to your configuration (e.g., `mcp.json`):
+
+```json
+{
+  "postgmem": {
+    "url": "http://localhost:5000/sse"
+  }
+}
+```
+
+---
+
+## 🧠 Example System Prompt for LLMs
+
+> You have access to a long-term memory system via the Model Context Protocol (MCP) at the endpoint `postgmem`. Use the following tools:
+>
+> - `store`: Store a new memory. Parameters: `type`, `content` (JSON), `source`, `tags`, `confidence`, `relatedTo` (optional, memory ID), `relationshipType` (optional).
+> - `search`: Search for similar memories. Parameters: `query`, `limit`, `minSimilarity`, `filterTags`.
+> - `get`: Retrieve a memory by ID. Parameter: `id`.
+> - `getMany`: Retrieve multiple memories by their IDs. Parameter: `ids` (list of IDs).
+> - `delete`: Delete a memory by ID. Parameter: `id`.
+> - `createRelationship`: Create a relationship between two memories. Parameters: `fromId`, `toId`, `type`.
+>
+> Use these tools to remember, recall, relate, and manage information as needed to assist the user. You can also manually retrieve or relate memories by their IDs when necessary.
+
+---
+
+## 📖 Documentation
+
+- [Configuration & Advanced Setup](docs/configuration.md)
+- [Local Development](docs/local-development.md)
+- [Schema Migrations](docs/schema-migrations.md)
 
 ## License
 
-[Your license information here]
-
-## Contributing
-
-[Your contribution guidelines here]
-
-## For Contributors
-
-If you want to customize or extend the database schema, see [docs/schema-migrations.md](docs/schema-migrations.md) for details on how migrations work, how to add new migrations, and best practices for schema changes. 
+MIT
