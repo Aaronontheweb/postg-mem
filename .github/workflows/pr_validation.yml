@@ -85,11 +85,6 @@ jobs:
       - name: "dotnet build"
         run: dotnet build -c Release
 
-      # .NET Framework tests can't run reliably on Linux, so we only do .NET 8
-
       - name: "dotnet test"
         shell: bash
         run: dotnet test -c Release 
-
-      - name: "dotnet pack"
-        run: dotnet pack -c Release -o ./bin/nuget
