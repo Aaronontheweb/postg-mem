@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
 using PostgMem.Services;
 using PostgMem.Settings;
 using Registrator.Net;
+using HealthChecks.NpgSql;
 
 namespace PostgMem.Extensions;
 
