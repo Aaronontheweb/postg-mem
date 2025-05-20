@@ -5,7 +5,7 @@ updates:
   schedule:
     interval: daily
 
-- package-ecosystem: "dotnet-sdk"
+- package-ecosystem: dotnet-sdk
   directory: "/"
   schedule:
     interval: "weekly"

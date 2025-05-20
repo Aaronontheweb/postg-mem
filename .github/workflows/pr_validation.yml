@@ -24,13 +24,13 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
         with:
           lfs: true
           fetch-depth: 0
 
       - name: "Install .NET SDK"
-        uses: actions/setup-dotnet@v4.0.0
+        uses: actions/setup-dotnet@v4.3.1
         with:
           global-json-file: "./global.json"
 
