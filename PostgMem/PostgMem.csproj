@@ -12,6 +12,8 @@
         <RuntimeIdentifiers>osx-x64;osx-arm64;linux-x64;linux-arm64;linux-arm;win-x64;</RuntimeIdentifiers>
         <!-- Remove parallel builds, to avoid race conditions -->
         <ContainerPublishInParallel>false</ContainerPublishInParallel>
+        <InternalsVisibleTo>PostgMem.IntegrationTests</InternalsVisibleTo>
+        <AssemblyName>PostgMem</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

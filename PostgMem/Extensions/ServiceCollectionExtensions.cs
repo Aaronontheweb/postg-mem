@@ -7,9 +7,9 @@ using HealthChecks.NpgSql;
 
 namespace PostgMem.Extensions;
 
-internal static class ServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
-    internal static IServiceCollection AddPostgMem(
+    public static IServiceCollection AddPostgMem(
         this IServiceCollection services)
     {
         services.AddEmbeddings();
@@ -18,7 +18,7 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    internal static IServiceCollection AddEmbeddings(
+    public static IServiceCollection AddEmbeddings(
         this IServiceCollection services)
     {
         services
@@ -35,7 +35,7 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    internal static IServiceCollection AddStorage(
+    public static IServiceCollection AddStorage(
         this IServiceCollection services)
     {
         services
