@@ -162,4 +162,26 @@ public class IntegrationTests : TestKit
         Assert.True(deleteResult);
         Assert.Null(retrievedMemory);
     }
+
+    [Fact]
+    public async Task SchemaVersionTable_IsPopulated_AfterMigration()
+    {
+        await using var conn = new NpgsqlConnection(_fixture.PostgresConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT version, name, applied_at FROM schema_version ORDER BY version";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var found = false;
+        while (await reader.ReadAsync())
+        {
+            found = true;
+            var version = reader.GetInt32(0);
+            var name = reader.GetString(1);
+            var appliedAt = reader.GetDateTime(2);
+            Assert.Equal(1, version);
+            Assert.Contains("001_init.sql", name);
+            Assert.True(appliedAt <= DateTime.UtcNow);
+        }
+        Assert.True(found, "No migrations found in schema_version table");
+    }
 }
