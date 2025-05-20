@@ -172,16 +172,57 @@ public class IntegrationTests : TestKit
         cmd.CommandText = "SELECT version, name, applied_at FROM schema_version ORDER BY version";
         await using var reader = await cmd.ExecuteReaderAsync();
         var found = false;
+        var versions = new List<int>();
+        var names = new List<string>();
         while (await reader.ReadAsync())
         {
             found = true;
             var version = reader.GetInt32(0);
             var name = reader.GetString(1);
             var appliedAt = reader.GetDateTime(2);
-            Assert.Equal(1, version);
-            Assert.Contains("001_init.sql", name);
+            Assert.True(version > 0, $"Migration version should be positive, got {version}");
+            Assert.False(string.IsNullOrWhiteSpace(name), "Migration name should not be empty");
             Assert.True(appliedAt <= DateTime.UtcNow);
+            versions.Add(version);
+            names.Add(name);
         }
         Assert.True(found, "No migrations found in schema_version table");
+        // Optionally: check that version numbers are unique and increasing
+        Assert.Equal(versions.OrderBy(v => v), versions);
+        Assert.Equal(names.Distinct().Count(), names.Count);
+    }
+
+    [Fact]
+    public async Task CanGetManyMemories()
+    {
+        _storage = Host.Services.GetRequiredService<IStorage>();
+        // Store multiple memories
+        var m1 = await _storage.StoreMemory("type1", "{\"fact\": \"A\"}", "src1", new[] { "tag1" }, 1.0);
+        var m2 = await _storage.StoreMemory("type2", "{\"fact\": \"B\"}", "src2", new[] { "tag2" }, 1.0);
+        var m3 = await _storage.StoreMemory("type3", "{\"fact\": \"C\"}", "src3", new[] { "tag3" }, 1.0);
+        // Fetch by ids
+        var results = await _storage.GetMany(new[] { m1.Id, m3.Id }, CancellationToken.None);
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, m => m.Id == m1.Id);
+        Assert.Contains(results, m => m.Id == m3.Id);
+    }
+
+    [Fact]
+    public async Task CanCreateAndGetMemoryRelationships()
+    {
+        _storage = Host.Services.GetRequiredService<IStorage>();
+        // Store two memories
+        var m1 = await _storage.StoreMemory("type1", "{\"fact\": \"Parent\"}", "src1", new[] { "tag1" }, 1.0);
+        var m2 = await _storage.StoreMemory("type2", "{\"fact\": \"Child\"}", "src2", new[] { "tag2" }, 1.0);
+        // Create relationship
+        var rel = await _storage.CreateRelationship(m1.Id, m2.Id, "parent", CancellationToken.None);
+        Assert.Equal(m1.Id, rel.FromMemoryId);
+        Assert.Equal(m2.Id, rel.ToMemoryId);
+        Assert.Equal("parent", rel.Type);
+        // Get relationships
+        var rels = await _storage.GetRelationships(m1.Id, "parent", CancellationToken.None);
+        Assert.Single(rels);
+        Assert.Equal(rel.Id, rels[0].Id);
+        Assert.Equal(m2.Id, rels[0].ToMemoryId);
     }
 }

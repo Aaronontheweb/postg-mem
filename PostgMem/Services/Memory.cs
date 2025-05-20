@@ -34,6 +34,10 @@ public interface IStorage
         Guid id,
         CancellationToken cancellationToken = default
     );
+
+    Task<List<Memory>> GetMany(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+    Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, string type, CancellationToken cancellationToken = default);
+    Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, string? type = null, CancellationToken cancellationToken = default);
 }
 
 [AutoRegisterInterfaces(ServiceLifetime.Singleton)]
@@ -233,5 +237,89 @@ public class Storage : IStorage
 
         int rowsAffected = await cmd.ExecuteNonQueryAsync(cancellationToken);
         return rowsAffected > 0;
+    }
+
+    public async Task<List<Memory>> GetMany(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        const string sql = @"
+            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at
+            FROM memories
+            WHERE id = ANY(@ids)";
+        await using NpgsqlCommand cmd = new(sql, connection);
+        cmd.Parameters.AddWithValue("ids", ids.ToArray());
+        List<Memory> memories = [];
+        await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            memories.Add(
+                new Memory
+                {
+                    Id = reader.GetGuid(0),
+                    Type = reader.GetString(1),
+                    Content = reader.GetFieldValue<JsonDocument>(2),
+                    Source = reader.GetString(3),
+                    Embedding = reader.GetFieldValue<Vector>(4),
+                    Tags = reader.GetFieldValue<string[]>(5),
+                    Confidence = reader.GetDouble(6),
+                    CreatedAt = reader.GetDateTime(7),
+                    UpdatedAt = reader.GetDateTime(8),
+                }
+            );
+        }
+        return memories;
+    }
+
+    public async Task<MemoryRelationship> CreateRelationship(Guid fromId, Guid toId, string type, CancellationToken cancellationToken = default)
+    {
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        const string sql = @"
+            INSERT INTO memory_relationships (id, from_memory_id, to_memory_id, type, created_at)
+            VALUES (@id, @from, @to, @type, @createdAt)";
+        var rel = new MemoryRelationship
+        {
+            Id = Guid.NewGuid(),
+            FromMemoryId = fromId,
+            ToMemoryId = toId,
+            Type = type,
+            CreatedAt = DateTime.UtcNow
+        };
+        await using NpgsqlCommand cmd = new(sql, connection);
+        cmd.Parameters.AddWithValue("id", rel.Id);
+        cmd.Parameters.AddWithValue("from", rel.FromMemoryId);
+        cmd.Parameters.AddWithValue("to", rel.ToMemoryId);
+        cmd.Parameters.AddWithValue("type", rel.Type);
+        cmd.Parameters.AddWithValue("createdAt", rel.CreatedAt);
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        return rel;
+    }
+
+    public async Task<List<MemoryRelationship>> GetRelationships(Guid memoryId, string? type = null, CancellationToken cancellationToken = default)
+    {
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        string sql = @"
+            SELECT id, from_memory_id, to_memory_id, type, created_at
+            FROM memory_relationships
+            WHERE from_memory_id = @id";
+        if (!string.IsNullOrEmpty(type))
+            sql += " AND type = @type";
+        await using NpgsqlCommand cmd = new(sql, connection);
+        cmd.Parameters.AddWithValue("id", memoryId);
+        if (!string.IsNullOrEmpty(type))
+            cmd.Parameters.AddWithValue("type", type);
+        List<MemoryRelationship> rels = [];
+        await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rels.Add(new MemoryRelationship
+            {
+                Id = reader.GetGuid(0),
+                FromMemoryId = reader.GetGuid(1),
+                ToMemoryId = reader.GetGuid(2),
+                Type = reader.GetString(3),
+                CreatedAt = reader.GetDateTime(4)
+            });
+        }
+        return rels;
     }
 }
