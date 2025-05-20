@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: postgmem-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgmem
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: postgmem-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  ollama:
+    image: ollama/ollama
+    container_name: postgmem-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+  # Initialize Ollama with the required model
+  ollama-init:
+    image: curlimages/curl:latest
+    container_name: postgmem-ollama-init
+    entrypoint: ["/bin/sh", "-c"]
+    depends_on:
+      - ollama
+    command: >
+      "
+      echo 'Waiting for Ollama service to start...' &&
+      sleep 15 &&
+      for i in 1 2 3 4 5; do
+        echo 'Attempting to pull model (try $i/5)...' &&
+        if curl -s -X POST http://ollama:11434/api/pull -d '{\"name\": \"all-minilm:33m-l12-v2-fp16\"}'; then
+          echo 'Ollama model pull initiated successfully' &&
+          exit 0
+        fi &&
+        echo 'Ollama not ready yet, waiting...' &&
+        sleep 10
+      done &&
+      echo 'Failed to pull model after multiple attempts' &&
+      exit 1
+      "
+
+  # PostgMem application
+  postg-mem:
+    image: postgmem:latest
+    container_name: postgmem-api
+    environment:
+      - ConnectionStrings__Storage=Host=postgres;Port=5432;Database=postgmem;Username=postgres;Password=postgres
+      - POSTGMEM_Embeddings__ApiUrl=http://ollama:11434
+      - POSTGMEM_Embeddings__Model=all-minilm:33m-l12-v2-fp16
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  ollama-data: 
