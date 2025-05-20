@@ -13,6 +13,7 @@
         <!-- Remove parallel builds, to avoid race conditions -->
         <ContainerPublishInParallel>false</ContainerPublishInParallel>
         <InternalsVisibleTo>PostgMem.IntegrationTests</InternalsVisibleTo>
+        <AssemblyName>PostgMem</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
