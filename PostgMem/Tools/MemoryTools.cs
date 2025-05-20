@@ -3,6 +3,7 @@ using System.Text;
 using ModelContextProtocol.Server;
 using PostgMem.Services;
 using Memory = PostgMem.Models.Memory;
+using PostgMem.Models;
 
 namespace PostgMem.Tools;
 
@@ -16,27 +17,29 @@ public class MemoryTools
         _storage = storage;
     }
 
-    [McpServerTool, Description("Store a new memory in the database")]
+    [McpServerTool, Description("Store a new memory in the database, optionally creating a relationship to another memory")]
     public async Task<string> Store(
         [Description("The type of memory (e.g., 'conversation', 'document', etc.)")] string type,
         [Description("The content of the memory as a JSON object")] string content,
         [Description("The source of the memory (e.g., 'user', 'system', etc.)")] string source,
         [Description("Optional tags to categorize the memory")] string[]? tags = null,
         [Description("Confidence score for the memory (0.0 to 1.0)")] double confidence = 1.0,
+        [Description("Optionally, the ID of a related memory")] Guid? relatedTo = null,
+        [Description("Optionally, the type of relationship to create")] string? relationshipType = null,
         CancellationToken cancellationToken = default
     )
     {
-
-        // Store the memory
+        // Store the memory (and optionally create a relationship)
         Memory memory = await _storage.StoreMemory(
             type,
             content,
             source,
             tags,
             confidence,
+            relatedTo,
+            relationshipType,
             cancellationToken
         );
-
         return $"Memory stored successfully with ID: {memory.Id}";
     }
 
@@ -80,7 +83,6 @@ public class MemoryTools
             );
             result.AppendLine($"Confidence: {memory.Confidence:F2}");
             result.AppendLine($"Created: {memory.CreatedAt:yyyy-MM-dd HH:mm:ss}");
-            result.AppendLine();
         }
 
         return result.ToString();
@@ -123,5 +125,43 @@ public class MemoryTools
         bool success = await _storage.Delete(id, cancellationToken);
 
         return success ? $"Memory with ID {id} deleted successfully." : $"Memory with ID {id} not found or could not be deleted.";
+    }
+
+    [McpServerTool, Description("Fetch multiple memories by their IDs")]
+    public async Task<string> GetMany(
+        [Description("The list of memory IDs to fetch")] Guid[] ids,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var memories = await _storage.GetMany(ids, cancellationToken);
+        if (memories.Count == 0)
+            return "No memories found for the provided IDs.";
+        StringBuilder result = new();
+        result.AppendLine($"Found {memories.Count} memories:");
+        result.AppendLine();
+        foreach (var memory in memories)
+        {
+            result.AppendLine($"ID: {memory.Id}");
+            result.AppendLine($"Type: {memory.Type}");
+            result.AppendLine($"Content: {memory.Content.RootElement}");
+            result.AppendLine($"Source: {memory.Source}");
+            result.AppendLine($"Tags: {(memory.Tags != null ? string.Join(", ", memory.Tags) : "none")}");
+            result.AppendLine($"Confidence: {memory.Confidence:F2}");
+            result.AppendLine($"Created: {memory.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+            result.AppendLine();
+        }
+        return result.ToString();
+    }
+
+    [McpServerTool, Description("Create a relationship between two memories")]
+    public async Task<string> CreateRelationship(
+        [Description("The ID of the source memory")] Guid fromId,
+        [Description("The ID of the target memory")] Guid toId,
+        [Description("The type of relationship")] string type,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var rel = await _storage.CreateRelationship(fromId, toId, RelationshipTypeHelper.FromDbString(type), cancellationToken);
+        return $"Relationship created: {rel.Id} from {rel.FromMemoryId} to {rel.ToMemoryId} (type: {rel.Type})";
     }
 }
