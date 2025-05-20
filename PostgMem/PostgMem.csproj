@@ -4,6 +4,14 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <ContainerRepository>postgmem</ContainerRepository>
+        <ContainerTitle>postgmem</ContainerTitle>
+        <ContainerImageTags>$(VersionPrefix);latest</ContainerImageTags>
+        <ContainerRuntimeIdentifiers>linux-x64;linux-arm64;linux-arm;</ContainerRuntimeIdentifiers>
+        <RuntimeIdentifiers>osx-x64;osx-arm64;linux-x64;linux-arm64;linux-arm;win-x64;</RuntimeIdentifiers>
+        <!-- Remove parallel builds, to avoid race conditions -->
+        <ContainerPublishInParallel>false</ContainerPublishInParallel>
     </PropertyGroup>
 
     <ItemGroup>
