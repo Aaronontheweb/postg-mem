@@ -26,6 +26,7 @@ public class MemoryTools
         [Description("Confidence score for the memory (0.0 to 1.0)")] double confidence = 1.0,
         [Description("Optionally, the ID of a related memory. Use this to link related reference materials, how-tos, or examples.")] Guid? relatedTo = null,
         [Description("Optionally, the type of relationship to create (e.g., 'example-of', 'explains', 'related-to'). Use relationships to connect related knowledge.")] string? relationshipType = null,
+        [Description("Optional title for the memory. If not provided, will be null.")] string? title = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -38,7 +39,8 @@ public class MemoryTools
             confidence,
             relatedTo,
             relationshipType,
-            cancellationToken
+            cancellationToken,
+            title
         );
         return $"Memory stored successfully with ID: {memory.Id}";
     }
@@ -75,6 +77,10 @@ public class MemoryTools
         foreach (Memory? memory in memories)
         {
             result.AppendLine($"ID: {memory.Id}");
+            if (memory.Title != null)
+            {
+                result.AppendLine($"Title: {memory.Title}");
+            }
             result.AppendLine($"Type: {memory.Type}");
             result.AppendLine($"Content: {memory.Content.RootElement}");
             result.AppendLine($"Source: {memory.Source}");
@@ -103,6 +109,10 @@ public class MemoryTools
 
         StringBuilder result = new();
         result.AppendLine($"ID: {memory.Id}");
+        if (memory.Title != null)
+        {
+            result.AppendLine($"Title: {memory.Title}");
+        }
         result.AppendLine($"Type: {memory.Type}");
         result.AppendLine($"Content: {memory.Content.RootElement}");
         result.AppendLine($"Source: {memory.Source}");
@@ -142,6 +152,10 @@ public class MemoryTools
         foreach (var memory in memories)
         {
             result.AppendLine($"ID: {memory.Id}");
+            if (memory.Title != null)
+            {
+                result.AppendLine($"Title: {memory.Title}");
+            }
             result.AppendLine($"Type: {memory.Type}");
             result.AppendLine($"Content: {memory.Content.RootElement}");
             result.AppendLine($"Source: {memory.Source}");
