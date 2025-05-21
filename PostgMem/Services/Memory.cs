@@ -16,7 +16,8 @@ public interface IStorage
         double confidence,
         Guid? relatedTo = null,
         string? relationshipType = null,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        string? title = null
     );
 
     Task<List<Memory>> Search(
@@ -62,7 +63,8 @@ public class Storage : IStorage
         double confidence,
         Guid? relatedTo = null,
         string? relationshipType = null,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        string? title = null
     )
     {
         JsonDocument document = JsonDocument.Parse(content);
@@ -86,8 +88,14 @@ public class Storage : IStorage
             textToEmbed = contentElement.GetString() ?? content;
         }
 
+        // Combine title and content for embedding if title is present
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            textToEmbed = title + " " + textToEmbed;
+        }
+
         float[] embedding = await _embeddingService.Generate(
-            textToEmbed, // Use the extracted text or fallback string for embedding
+            textToEmbed, // Use the combined title + content for embedding
             cancellationToken
         );
         
@@ -104,12 +112,13 @@ public class Storage : IStorage
             Confidence = confidence,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            Title = title // Set the title
         };
 
         const string sql =
             @"
-            INSERT INTO memories (id, type, content, source, embedding, tags, confidence, created_at, updated_at)
-            VALUES (@id, @type, @content, @source, @embedding, @tags, @confidence, @createdAt, @updatedAt)";
+            INSERT INTO memories (id, type, content, source, embedding, tags, confidence, created_at, updated_at, title)
+            VALUES (@id, @type, @content, @source, @embedding, @tags, @confidence, @createdAt, @updatedAt, @title)";
 
         await using NpgsqlCommand cmd = new(sql, connection);
         cmd.Parameters.AddWithValue("id", memory.Id);
@@ -121,6 +130,7 @@ public class Storage : IStorage
         cmd.Parameters.AddWithValue("confidence", memory.Confidence);
         cmd.Parameters.AddWithValue("createdAt", memory.CreatedAt);
         cmd.Parameters.AddWithValue("updatedAt", memory.UpdatedAt);
+        cmd.Parameters.AddWithValue("title", (object?)memory.Title ?? DBNull.Value);
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
 
@@ -151,7 +161,7 @@ public class Storage : IStorage
 
         string sql =
             @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at
+            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE embedding <=> @embedding < @maxDistance";
 
@@ -189,6 +199,7 @@ public class Storage : IStorage
                     Confidence = reader.GetDouble(6),
                     CreatedAt = reader.GetDateTime(7),
                     UpdatedAt = reader.GetDateTime(8),
+                    Title = reader.IsDBNull(9) ? null : reader.GetString(9)
                 }
             );
         }
@@ -205,7 +216,7 @@ public class Storage : IStorage
 
         const string sql =
             @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at
+            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE id = @id";
 
@@ -227,6 +238,7 @@ public class Storage : IStorage
                 Confidence = reader.GetDouble(6),
                 CreatedAt = reader.GetDateTime(7),
                 UpdatedAt = reader.GetDateTime(8),
+                Title = reader.IsDBNull(9) ? null : reader.GetString(9)
             };
         }
 
@@ -253,7 +265,7 @@ public class Storage : IStorage
     {
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         const string sql = @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at
+            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE id = ANY(@ids)";
         await using NpgsqlCommand cmd = new(sql, connection);
@@ -274,6 +286,7 @@ public class Storage : IStorage
                     Confidence = reader.GetDouble(6),
                     CreatedAt = reader.GetDateTime(7),
                     UpdatedAt = reader.GetDateTime(8),
+                    Title = reader.IsDBNull(9) ? null : reader.GetString(9)
                 }
             );
         }

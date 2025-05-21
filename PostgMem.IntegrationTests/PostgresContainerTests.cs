@@ -109,6 +109,55 @@ public class IntegrationTests : TestKit
     }
 
     [Fact]
+    public async Task Should_Store_And_Retrieve_Memory_With_Title()
+    {
+        _storage = Host.Services.GetRequiredService<IStorage>();
+        _embeddingService = Host.Services.GetRequiredService<IEmbeddingService>();
+
+        var title = "Test Title";
+        var memory = await _storage.StoreMemory(
+            "test",
+            "{\"content\": \"test content\"}",
+            "test",
+            new[] { "test" },
+            1.0,
+            null,
+            null,
+            CancellationToken.None,
+            title // Pass the title
+        );
+
+        var retrieved = await _storage.Get(memory.Id, CancellationToken.None);
+        Assert.NotNull(retrieved);
+        Assert.Equal(memory.Id, retrieved.Id);
+        Assert.Equal(title, retrieved.Title);
+    }
+
+    [Fact]
+    public async Task Should_Store_And_Retrieve_Memory_Without_Title()
+    {
+        _storage = Host.Services.GetRequiredService<IStorage>();
+        _embeddingService = Host.Services.GetRequiredService<IEmbeddingService>();
+
+        var memory = await _storage.StoreMemory(
+            "test",
+            "{\"content\": \"test content\"}",
+            "test",
+            new[] { "test" },
+            1.0,
+            null,
+            null,
+            CancellationToken.None
+            // No title provided
+        );
+
+        var retrieved = await _storage.Get(memory.Id, CancellationToken.None);
+        Assert.NotNull(retrieved);
+        Assert.Equal(memory.Id, retrieved.Id);
+        Assert.Null(retrieved.Title);
+    }
+
+    [Fact]
     public async Task CanSearchMemories()
     {
         // Get services from DI
