@@ -1,5 +1,4 @@
-#### 1.0.2 May 20th 2025 ####
+#### 1.0.3 May 20th 2025 ####
 
-- Changed RelationshipType from enum to string for better LLM compatibility
-- Simplified relationship handling in Storage and MemoryTools
-- Improved API ergonomics for agent interactions
+- Added explicit `Title` to all memories - and this gets embedded along with the content.
+- Added `/postgmem-stats` HTTP endpoint we can use to track some basic statistics 
