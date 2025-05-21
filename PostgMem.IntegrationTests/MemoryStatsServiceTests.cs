@@ -90,9 +90,9 @@ public class MemoryStatsServiceTests : TestKit
         // Add some memories
         var memories = new[]
         {
-            (type: "test", content: "{\"data\": \"small memory\"}", tags: new[] { "test", "small" }),
-            (type: "test", content: "{\"data\": \"medium memory with more content\"}", tags: new[] { "test", "medium" }),
-            (type: "test", content: "{\"data\": \"large memory with even more content to increase the size of the json document\"}", tags: new[] { "test", "large" })
+            (type: "test", content: "small memory", tags: new[] { "test", "small" }),
+            (type: "test", content: "medium memory with more content", tags: new[] { "test", "medium" }),
+            (type: "test", content: "large memory with even more content to increase the size", tags: new[] { "test", "large" })
         };
         
         foreach (var (type, content, tags) in memories)

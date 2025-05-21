@@ -48,8 +48,8 @@ public class MemoryStatsService : IMemoryStatsService
             totalMemories = Convert.ToInt32(result);
         }
         
-        // Get average size (content field)
-        await using (var cmd = new NpgsqlCommand("SELECT AVG(LENGTH(content::text)) FROM memories", connection))
+        // Get average size (text field)
+        await using (var cmd = new NpgsqlCommand("SELECT AVG(LENGTH(text)) FROM memories", connection))
         {
             var result = await cmd.ExecuteScalarAsync(cancellationToken);
             if (result != DBNull.Value && result != null)

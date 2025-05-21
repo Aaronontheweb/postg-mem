@@ -3,12 +3,13 @@
     <Copyright>© $([System.DateTime]::Now.Year)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/dariogriffo/postg-mem</PackageProjectUrl>
-    <VersionPrefix>1.0.3</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
     <Deterministic>true</Deterministic>
-    <PackageReleaseNotes>- Added explicit `Title` to all memories - and this gets embedded along with the content.
-- Added `/postgmem-stats` HTTP endpoint we can use to track some basic statistics</PackageReleaseNotes>
+    <PackageReleaseNotes>- Added dedicated `text` column for storing raw memory content, improving embedding quality and LLM interaction
+- Maintained backwards compatibility with JSON content storage while optimizing for plain text
+- Updated MCP tool surface to accept plain text content while preserving rich metadata capabilities</PackageReleaseNotes>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 </Project>

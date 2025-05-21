@@ -20,7 +20,7 @@ public class MemoryTools
     [McpServerTool, Description("Store a new memory in the database, optionally creating a relationship to another memory. Use this to save reference material, how-to guides, coding standards, or any information you (the LLM) may want to refer to when completing tasks. Include as much context as possible, such as markdown, code samples, and detailed explanations. Create relationships to link related reference materials or examples.")]
     public async Task<string> Store(
         [Description("The type of memory (e.g., 'conversation', 'document', 'reference', 'how-to', etc.). Use 'reference' or 'how-to' for reusable knowledge.")] string type,
-        [Description("The content of the memory as a JSON object. Include rich context, markdown, code samples, and detailed explanations whenever possible.")] string content,
+        [Description("Plain text (markdown, code, prose, etc.) that you want to store and embed.")] string text,
         [Description("The source of the memory (e.g., 'user', 'system', 'LLM', etc.). Use 'LLM' if you are storing knowledge for your own future use.")] string source,
         [Description("Optional tags to categorize the memory. Use tags like 'coding-standard', 'unit-test', 'reference', 'how-to', etc. to make retrieval easier.")] string[]? tags = null,
         [Description("Confidence score for the memory (0.0 to 1.0)")] double confidence = 1.0,
@@ -33,7 +33,7 @@ public class MemoryTools
         // Store the memory (and optionally create a relationship)
         Memory memory = await _storage.StoreMemory(
             type,
-            content,
+            text,
             source,
             tags,
             confidence,
@@ -82,7 +82,7 @@ public class MemoryTools
                 result.AppendLine($"Title: {memory.Title}");
             }
             result.AppendLine($"Type: {memory.Type}");
-            result.AppendLine($"Content: {memory.Content.RootElement}");
+            result.AppendLine($"Text: {memory.Text}");
             result.AppendLine($"Source: {memory.Source}");
             result.AppendLine(
                 $"Tags: {(memory.Tags != null ? string.Join(", ", memory.Tags) : "none")}"
@@ -114,7 +114,7 @@ public class MemoryTools
             result.AppendLine($"Title: {memory.Title}");
         }
         result.AppendLine($"Type: {memory.Type}");
-        result.AppendLine($"Content: {memory.Content.RootElement}");
+        result.AppendLine($"Text: {memory.Text}");
         result.AppendLine($"Source: {memory.Source}");
         result.AppendLine(
             $"Tags: {(memory.Tags != null ? string.Join(", ", memory.Tags) : "none")}"
@@ -157,7 +157,7 @@ public class MemoryTools
                 result.AppendLine($"Title: {memory.Title}");
             }
             result.AppendLine($"Type: {memory.Type}");
-            result.AppendLine($"Content: {memory.Content.RootElement}");
+            result.AppendLine($"Text: {memory.Text}");
             result.AppendLine($"Source: {memory.Source}");
             result.AppendLine($"Tags: {(memory.Tags != null ? string.Join(", ", memory.Tags) : "none")}");
             result.AppendLine($"Confidence: {memory.Confidence:F2}");
