@@ -2,6 +2,8 @@ using Configuration.Extensions.EnvironmentFile;
 using PostgMem.Extensions;
 using PostgMem.Tools;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Npgsql;
+using PostgMem.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -98,5 +100,12 @@ catch (Exception ex)
 
 // Configure health check endpoints
 app.MapHealthChecks("/healthz");
+
+// Configure metrics endpoint
+app.MapGet("/postgmem-stats", async (IMemoryStatsService statsService) =>
+{
+    var stats = await statsService.GetStatsAsync();
+    return Results.Json(stats);
+});
 
 app.Run();

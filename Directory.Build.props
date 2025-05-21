@@ -3,13 +3,12 @@
     <Copyright>© $([System.DateTime]::Now.Year)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/dariogriffo/postg-mem</PackageProjectUrl>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
     <Deterministic>true</Deterministic>
-    <PackageReleaseNotes>- Changed RelationshipType from enum to string for better LLM compatibility
-- Simplified relationship handling in Storage and MemoryTools
-- Improved API ergonomics for agent interactions</PackageReleaseNotes>
+    <PackageReleaseNotes>- Added explicit `Title` to all memories - and this gets embedded along with the content.
+- Added `/postgmem-stats` HTTP endpoint we can use to track some basic statistics</PackageReleaseNotes>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 </Project>
