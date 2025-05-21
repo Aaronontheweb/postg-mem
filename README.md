@@ -82,6 +82,7 @@ To use PostgMem with any MCP-compatible client, add the following to your config
 - [Configuration & Advanced Setup](docs/configuration.md)
 - [Local Development](docs/local-development.md)
 - [Schema Migrations](docs/schema-migrations.md)
+- [Architecture Decision Records](docs/adr/README.md)
 
 ## License
 

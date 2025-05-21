@@ -67,25 +67,31 @@ public class Storage : IStorage
         string? title = null
     )
     {
-        JsonDocument document = JsonDocument.Parse(content);
+        // Determine whether the incoming string is JSON or plain text
+        JsonDocument document;
+        string textToEmbed;
 
-        // Extract text for embedding
-        string textToEmbed = content; // Default to original content string
-        if (document.RootElement.TryGetProperty("fact", out var factElement) && factElement.ValueKind == JsonValueKind.String)
+        try
         {
-            textToEmbed = factElement.GetString() ?? content;
+            document = JsonDocument.Parse(content);
+
+            // Attempt to extract a sensible text body from common keys; fallback to full JSON text
+            textToEmbed =
+                document.RootElement.TryGetProperty("text", out var tElem) && tElem.ValueKind == JsonValueKind.String
+                    ? tElem.GetString() ?? content
+                : document.RootElement.TryGetProperty("fact", out var fElem) && fElem.ValueKind == JsonValueKind.String
+                    ? fElem.GetString() ?? content
+                : document.RootElement.TryGetProperty("observation", out var oElem) && oElem.ValueKind == JsonValueKind.String
+                    ? oElem.GetString() ?? content
+                : document.RootElement.TryGetProperty("content", out var cElem) && cElem.ValueKind == JsonValueKind.String
+                    ? cElem.GetString() ?? content
+                : content;
         }
-        else if (document.RootElement.TryGetProperty("observation", out var observationElement) && observationElement.ValueKind == JsonValueKind.String)
+        catch (JsonException)
         {
-            textToEmbed = observationElement.GetString() ?? content;
-        }
-        else if (document.RootElement.TryGetProperty("text", out var textElement) && textElement.ValueKind == JsonValueKind.String)
-        {
-            textToEmbed = textElement.GetString() ?? content;
-        }
-        else if (document.RootElement.TryGetProperty("content", out var contentElement) && contentElement.ValueKind == JsonValueKind.String)
-        {
-            textToEmbed = contentElement.GetString() ?? content;
+            // Not valid JSON – treat entire string as text; store an empty JSON object for backwards compatibility
+            document = JsonDocument.Parse("{}");
+            textToEmbed = content;
         }
 
         // Combine title and content for embedding if title is present
@@ -106,6 +112,7 @@ public class Storage : IStorage
             Id = Guid.NewGuid(),
             Type = type,
             Content = document,
+            Text = textToEmbed,
             Source = source,
             Embedding = new Vector(embedding),
             Tags = tags,
@@ -117,13 +124,14 @@ public class Storage : IStorage
 
         const string sql =
             @"
-            INSERT INTO memories (id, type, content, source, embedding, tags, confidence, created_at, updated_at, title)
-            VALUES (@id, @type, @content, @source, @embedding, @tags, @confidence, @createdAt, @updatedAt, @title)";
+            INSERT INTO memories (id, type, content, text, source, embedding, tags, confidence, created_at, updated_at, title)
+            VALUES (@id, @type, @content, @text, @source, @embedding, @tags, @confidence, @createdAt, @updatedAt, @title)";
 
         await using NpgsqlCommand cmd = new(sql, connection);
         cmd.Parameters.AddWithValue("id", memory.Id);
         cmd.Parameters.AddWithValue("type", memory.Type);
         cmd.Parameters.AddWithValue("content", memory.Content);
+        cmd.Parameters.AddWithValue("text", memory.Text);
         cmd.Parameters.AddWithValue("source", memory.Source);
         cmd.Parameters.AddWithValue("embedding", memory.Embedding);
         cmd.Parameters.AddWithValue("tags", memory.Tags ?? []);
@@ -161,7 +169,7 @@ public class Storage : IStorage
 
         string sql =
             @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
+            SELECT id, type, content, text, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE embedding <=> @embedding < @maxDistance";
 
@@ -193,13 +201,14 @@ public class Storage : IStorage
                     Id = reader.GetGuid(0),
                     Type = reader.GetString(1),
                     Content = reader.GetFieldValue<JsonDocument>(2),
-                    Source = reader.GetString(3),
-                    Embedding = reader.GetFieldValue<Vector>(4),
-                    Tags = reader.GetFieldValue<string[]>(5),
-                    Confidence = reader.GetDouble(6),
-                    CreatedAt = reader.GetDateTime(7),
-                    UpdatedAt = reader.GetDateTime(8),
-                    Title = reader.IsDBNull(9) ? null : reader.GetString(9)
+                    Text = reader.GetString(3),
+                    Source = reader.GetString(4),
+                    Embedding = reader.GetFieldValue<Vector>(5),
+                    Tags = reader.GetFieldValue<string[]>(6),
+                    Confidence = reader.GetDouble(7),
+                    CreatedAt = reader.GetDateTime(8),
+                    UpdatedAt = reader.GetDateTime(9),
+                    Title = reader.IsDBNull(10) ? null : reader.GetString(10)
                 }
             );
         }
@@ -216,7 +225,7 @@ public class Storage : IStorage
 
         const string sql =
             @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
+            SELECT id, type, content, text, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE id = @id";
 
@@ -232,13 +241,14 @@ public class Storage : IStorage
                 Id = reader.GetGuid(0),
                 Type = reader.GetString(1),
                 Content = reader.GetFieldValue<JsonDocument>(2),
-                Source = reader.GetString(3),
-                Embedding = reader.GetFieldValue<Vector>(4),
-                Tags = reader.GetFieldValue<string[]>(5),
-                Confidence = reader.GetDouble(6),
-                CreatedAt = reader.GetDateTime(7),
-                UpdatedAt = reader.GetDateTime(8),
-                Title = reader.IsDBNull(9) ? null : reader.GetString(9)
+                Text = reader.GetString(3),
+                Source = reader.GetString(4),
+                Embedding = reader.GetFieldValue<Vector>(5),
+                Tags = reader.GetFieldValue<string[]>(6),
+                Confidence = reader.GetDouble(7),
+                CreatedAt = reader.GetDateTime(8),
+                UpdatedAt = reader.GetDateTime(9),
+                Title = reader.IsDBNull(10) ? null : reader.GetString(10)
             };
         }
 
@@ -265,7 +275,7 @@ public class Storage : IStorage
     {
         await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         const string sql = @"
-            SELECT id, type, content, source, embedding, tags, confidence, created_at, updated_at, title
+            SELECT id, type, content, text, source, embedding, tags, confidence, created_at, updated_at, title
             FROM memories
             WHERE id = ANY(@ids)";
         await using NpgsqlCommand cmd = new(sql, connection);
@@ -280,13 +290,14 @@ public class Storage : IStorage
                     Id = reader.GetGuid(0),
                     Type = reader.GetString(1),
                     Content = reader.GetFieldValue<JsonDocument>(2),
-                    Source = reader.GetString(3),
-                    Embedding = reader.GetFieldValue<Vector>(4),
-                    Tags = reader.GetFieldValue<string[]>(5),
-                    Confidence = reader.GetDouble(6),
-                    CreatedAt = reader.GetDateTime(7),
-                    UpdatedAt = reader.GetDateTime(8),
-                    Title = reader.IsDBNull(9) ? null : reader.GetString(9)
+                    Text = reader.GetString(3),
+                    Source = reader.GetString(4),
+                    Embedding = reader.GetFieldValue<Vector>(5),
+                    Tags = reader.GetFieldValue<string[]>(6),
+                    Confidence = reader.GetDouble(7),
+                    CreatedAt = reader.GetDateTime(8),
+                    UpdatedAt = reader.GetDateTime(9),
+                    Title = reader.IsDBNull(10) ? null : reader.GetString(10)
                 }
             );
         }

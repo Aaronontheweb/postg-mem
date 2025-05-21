@@ -1,4 +1,5 @@
-﻿using Akka.Hosting;
+﻿using System;
+using Akka.Hosting;
 using Akka.Hosting.TestKit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,7 +80,7 @@ public class IntegrationTests : TestKit
         await using var cmd = conn.CreateCommand();
         // Create a vector with 384 dimensions (all zeros)
         var vector = string.Join(",", Enumerable.Repeat("0", 384));
-        cmd.CommandText = $"INSERT INTO memories (id, type, content, source, embedding, tags, confidence, created_at, updated_at) VALUES (gen_random_uuid(), 'test', '{{}}'::jsonb, 'test', '[{vector}]'::vector, ARRAY['tag'], 1.0, now(), now()) RETURNING id;";
+        cmd.CommandText = $"INSERT INTO memories (id, type, content, text, source, embedding, tags, confidence, created_at, updated_at) VALUES (gen_random_uuid(), 'test', '{{}}'::jsonb, 'test text', 'test', '[{vector}]'::vector, ARRAY['tag'], 1.0, now(), now()) RETURNING id;";
         var id = await cmd.ExecuteScalarAsync();
         Assert.NotNull(id);
     }
@@ -94,7 +95,7 @@ public class IntegrationTests : TestKit
         // Test storing a memory
         var memory = await _storage.StoreMemory(
             "test",
-            "{\"content\": \"test content\"}",
+            "test content",
             "test",
             new[] { "test" },
             1.0,
@@ -117,7 +118,7 @@ public class IntegrationTests : TestKit
         var title = "Test Title";
         var memory = await _storage.StoreMemory(
             "test",
-            "{\"content\": \"test content\"}",
+            "test content",
             "test",
             new[] { "test" },
             1.0,
@@ -141,7 +142,7 @@ public class IntegrationTests : TestKit
 
         var memory = await _storage.StoreMemory(
             "test",
-            "{\"content\": \"test content\"}",
+            "test content",
             "test",
             new[] { "test" },
             1.0,
@@ -167,9 +168,9 @@ public class IntegrationTests : TestKit
         // Arrange
         var memories = new[]
         {
-            ("memory1", "{\"fact\": \"The sky is blue\"}", new[] { "nature" }),
-            ("memory2", "{\"fact\": \"Grass is green\"}", new[] { "nature" }),
-            ("memory3", "{\"fact\": \"The sun is hot\"}", new[] { "nature", "space" })
+            ("memory1", "The sky is blue", new[] { "nature" }),
+            ("memory2", "Grass is green", new[] { "nature" }),
+            ("memory3", "The sun is hot", new[] { "nature", "space" })
         };
 
         foreach (var (type, content, tags) in memories)
@@ -187,7 +188,7 @@ public class IntegrationTests : TestKit
 
         // Assert
         Assert.Single(results);
-        Assert.Contains("sky", results[0].Content.RootElement.GetProperty("fact").GetString());
+        Assert.Contains("sky", results[0].Text, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -200,7 +201,7 @@ public class IntegrationTests : TestKit
         // Arrange
         var memory = await _storage.StoreMemory(
             "test",
-            "{\"fact\": \"This will be deleted\"}",
+            "This will be deleted",
             "test",
             new[] { "temporary" },
             1.0
@@ -249,9 +250,9 @@ public class IntegrationTests : TestKit
     {
         _storage = Host.Services.GetRequiredService<IStorage>();
         // Store multiple memories
-        var m1 = await _storage.StoreMemory("type1", "{\"fact\": \"A\"}", "src1", new[] { "tag1" }, 1.0);
-        var m2 = await _storage.StoreMemory("type2", "{\"fact\": \"B\"}", "src2", new[] { "tag2" }, 1.0);
-        var m3 = await _storage.StoreMemory("type3", "{\"fact\": \"C\"}", "src3", new[] { "tag3" }, 1.0);
+        var m1 = await _storage.StoreMemory("type1", "A", "src1", new[] { "tag1" }, 1.0);
+        var m2 = await _storage.StoreMemory("type2", "B", "src2", new[] { "tag2" }, 1.0);
+        var m3 = await _storage.StoreMemory("type3", "C", "src3", new[] { "tag3" }, 1.0);
         // Fetch by ids
         var results = await _storage.GetMany(new[] { m1.Id, m3.Id }, CancellationToken.None);
         Assert.Equal(2, results.Count);
@@ -264,8 +265,8 @@ public class IntegrationTests : TestKit
     {
         _storage = Host.Services.GetRequiredService<IStorage>();
         // Store two memories
-        var m1 = await _storage.StoreMemory("type1", "{\"fact\": \"Parent\"}", "src1", new[] { "tag1" }, 1.0);
-        var m2 = await _storage.StoreMemory("type2", "{\"fact\": \"Child\"}", "src2", new[] { "tag2" }, 1.0);
+        var m1 = await _storage.StoreMemory("type1", "Parent", "src1", new[] { "tag1" }, 1.0);
+        var m2 = await _storage.StoreMemory("type2", "Child", "src2", new[] { "tag2" }, 1.0);
         // Create relationship
         var rel = await _storage.CreateRelationship(m1.Id, m2.Id, "Parent", CancellationToken.None);
         Assert.Equal(m1.Id, rel.FromMemoryId);
@@ -283,9 +284,9 @@ public class IntegrationTests : TestKit
     {
         _storage = Host.Services.GetRequiredService<IStorage>();
         // Store a related memory first
-        var related = await _storage.StoreMemory("typeX", "{\"fact\": \"Related\"}", "srcX", new[] { "tagX" }, 1.0);
+        var related = await _storage.StoreMemory("typeX", "Related", "srcX", new[] { "tagX" }, 1.0);
         // Store a new memory and create a relationship in one call
-        var memory = await _storage.StoreMemory("typeY", "{\"fact\": \"Main\"}", "srcY", new[] { "tagY" }, 1.0, related.Id, "Reference");
+        var memory = await _storage.StoreMemory("typeY", "Main", "srcY", new[] { "tagY" }, 1.0, related.Id, "Reference");
         // Check the memory exists
         var retrieved = await _storage.Get(memory.Id);
         Assert.NotNull(retrieved);

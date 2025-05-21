@@ -1,4 +1,5 @@
-#### 1.0.3 May 20th 2025 ####
+#### 1.1.0 May 21st 2025 ####
 
-- Added explicit `Title` to all memories - and this gets embedded along with the content.
-- Added `/postgmem-stats` HTTP endpoint we can use to track some basic statistics 
+- Added dedicated `text` column for storing raw memory content, improving embedding quality and LLM interaction
+- Maintained backwards compatibility with JSON content storage while optimizing for plain text
+- Updated MCP tool surface to accept plain text content while preserving rich metadata capabilities
