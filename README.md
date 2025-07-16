@@ -1,5 +1,7 @@
 # PostgMem
 
+## Deprecated. See https://github.com/petabridge/memorizer-v1 for the final version of this.
+
 PostgMem is a .NET-based service that allows AI agents to store, retrieve, and search through memories using vector embeddings. It leverages PostgreSQL with the pgvector extension to provide efficient similarity search capabilities.
 
 Key features:
